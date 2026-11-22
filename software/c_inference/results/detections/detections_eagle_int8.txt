@@ -1,0 +1,2 @@
+# class prob cx cy w h (relative to the network input)
+14 0.777267 0.432496 0.559149 0.826923 0.766827

@@ -1,0 +1,2 @@
+# class prob | rel cx cy w h | px left top w h (original image 773x512)
+bird            77.73% | 0.4325 0.5591 0.8269 0.7668 | 15 90 639 393

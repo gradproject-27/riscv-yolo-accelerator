@@ -1,0 +1,26 @@
+layer type            out shape        fa_in  fw fa_out shift   SQNR(dB)  maxAbsErr  maxAbs(float)
+  0  convolutional  16x416x416           7   2     1     8      20.91     1.0944    53.6895
+  1  maxpool        16x208x208                     1            23.21     1.0635    53.6895
+  2  convolutional  32x208x208           1   7     2     6      17.12     1.5962    32.6473
+  3  maxpool        32x104x104                     2            18.12     1.4199    32.6473
+  4  convolutional  64x104x104           2   6     2     6      13.66     3.2583    21.7285
+  5  maxpool        64x52x52                       2            14.93     3.2101    21.7285
+  6  convolutional  128x52x52            2   7     3     6      12.45     6.4081    22.2831
+  7  maxpool        128x26x26                      3            13.60     6.4081    22.2831
+  8  convolutional  256x26x26            3   7     3     7      12.37     3.4325    18.3075
+  9  maxpool        256x13x13                      3            13.22     3.4325    18.3075
+ 10  convolutional  512x13x13            3   7     3     7      12.17     2.0252    13.2021
+ 11  maxpool        512x13x13                      3            11.88     2.0252    13.2021
+ 12  convolutional  1024x13x13           3   6     1     8      11.52     6.3129    37.6951
+ 13  convolutional  256x13x13            1   8     4     5      11.29     1.3783     5.6117
+ 14  convolutional  512x13x13            4   7     3     8      11.73     1.9161     9.3923
+ 15  convolutional  255x13x13            3   6     2     7      22.44     3.1692    19.7932
+ 17  route          256x13x13                      4            11.29     1.3783     5.6117
+ 18  convolutional  128x13x13            4   6     3     7      11.82     1.8451     8.7359
+ 19  upsample       128x26x26                      3            11.82     1.8451     8.7359
+ 20  route          384x26x26                      3            12.14     3.4325    18.3075
+ 21  convolutional  256x26x26            3   8     3     8      11.98     2.2800     9.1334
+ 22  convolutional  255x26x26            3   7     2     8      21.26     3.9547    20.0812
+
+detections: float=6 int8=6 matched(IoU>0.5, same class)=6
+exported: 8845488 weights, 3694 biases (8845488 bytes of weights)
