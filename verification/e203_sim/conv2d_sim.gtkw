@@ -1,0 +1,47 @@
+[*] GTKWave view for the E203 conv2d_sim run
+[*] Open with: gtkwave build/tb_top.vcd conv2d_sim.gtkw   (from verification/e203_sim)
+[timestart] 0
+[size] 1600 900
+[pos] -1 -1
+[sst_width] 260
+[signals_width] 300
+[sst_expanded] 1
+@200
+-Clock / reset
+@28
+tb_top.clk
+tb_top.rst_n
+@200
+-Testbench counters
+@24
+tb_top.cycle_count[31:0]
+tb_top.valid_ir_cycle[31:0]
+@200
+-Instruction commit (EXU)
+@28
+tb_top.pc_vld[31:0]
+@22
+tb_top.pc[31:0]
+@28
+tb_top.i_valid
+tb_top.i_ready
+@22
+tb_top.x3[31:0]
+@200
+-DTCM writes (SIM_RESULT = addr 0x400, din 0xC0DE0001)
+@28
+tb_top.u_e203_soc_top.u_e203_subsys_top.u_e203_subsys_main.u_e203_cpu_top.u_e203_srams.u_e203_dtcm_ram.cs
+tb_top.u_e203_soc_top.u_e203_subsys_top.u_e203_subsys_main.u_e203_cpu_top.u_e203_srams.u_e203_dtcm_ram.we
+@22
+tb_top.u_e203_soc_top.u_e203_subsys_top.u_e203_subsys_main.u_e203_cpu_top.u_e203_srams.u_e203_dtcm_ram.addr[13:0]
+tb_top.u_e203_soc_top.u_e203_subsys_top.u_e203_subsys_main.u_e203_cpu_top.u_e203_srams.u_e203_dtcm_ram.din[31:0]
+@200
+-UART0 (printf output)
+@28
+tb_top.u_e203_soc_top.u_e203_subsys_top.u_e203_subsys_main.u_e203_subsys_perips.u_perips_apb_uart0.fifo_tx_valid
+@820
+tb_top.u_e203_soc_top.u_e203_subsys_top.u_e203_subsys_main.u_e203_subsys_perips.u_perips_apb_uart0.fifo_tx_data[7:0]
+@28
+tb_top.u_e203_soc_top.u_e203_subsys_top.u_e203_subsys_main.u_e203_subsys_perips.u_perips_apb_uart0.tx_o
+[pattern_trace] 1
+[pattern_trace] 0

@@ -1,1 +1,13 @@
 software/reference/darknet_upstream/
+
+# E203 bare-metal build outputs
+software/e203_baremetal/**/*.elf
+software/e203_baremetal/**/*.verilog
+software/e203_baremetal/**/*.dump
+software/e203_baremetal/**/*.dasm
+software/e203_baremetal/**/*.hex
+software/e203_baremetal/**/*.map
+software/e203_baremetal/**/*.o
+software/e203_baremetal/**/*.o.d
+# E203 simulation outputs (compiled simulator, waveforms, logs)
+verification/e203_sim/build/
