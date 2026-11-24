@@ -18,39 +18,62 @@ Both programs run on the Hummingbird **E203** RISC-V core RTL (Verilog), simulat
 
 ## Final result
 
-| Program | Result | Cycles | Instructions |
+| Program | Result | Whole run (testbench) | Convolution only (`mcycle`/`minstret`) |
 |---|---|---|---|
-| `1 + 1` | **TEST_PASS** (x3 = 1, i.e. the core computed 2) | 4,410 | 23 |
-| `conv2d_sim` | **PROGRAM PASS** (DTCM result = `0xC0DE0001`) | 241,980 | 86,989 |
+| `1 + 1` | **TEST_PASS** (x3 = 1, i.e. the core computed 2) | 4,410 cycles, 23 instr. | — |
+| `conv2d_sim` | **PROGRAM PASS** (DTCM result = `0xC0DE0001`) | 350,309 cycles, 125,117 instr. | **2,306 cycles, 836 instr.** |
 
-Convolution output printed by the E203 over its UART:
+Output printed by the E203 over its UART:
 
 ```
-HummingBird SDK Build Time: Nov 24 2026, 22:00:57
+HummingBird SDK Build Time: Nov 24 2026, 22:22:16
 Download Mode: ILM
 CPU Frequency 16500000 Hz
 Convolution output:
 63 72 81
 108 117 126
 153 162 171
+Convolution: 2306 cycles, 836 instructions
+Printing output: 85219 cycles
 
 ==========================================
         PROGRAM PASS
 DTCM result             = 0xc0de0001
-Total cycle_count       = 241980
-Valid instruction count = 86989
+Total cycle_count       = 350309
+Valid instruction count = 125117
+Program-reported counters (mcycle/minstret):
+  section cycles        = 2306
+  section instructions  = 836
+  extra cycles          = 85219
 ==========================================
 ```
 
 The numbers `63 72 81 / 108 117 126 / 153 162 171` match the progress report exactly.
 (Check: top-left = 1+2+3+6+7+8+11+12+13 = 63.)
 
-**Cycle count is different from the report** (report: 35,326 cycles, 18,049 instructions).
-The convolution math itself is tiny; most cycles go into the SDK startup code and `printf`,
-which sends each character to the UART and waits for it to be transmitted. The report's run
-also shows a different measured CPU frequency (540,344 Hz vs. our 16,500,000 Hz), so the
-authors' testbench/SDK setup was not identical to ours. We have not pinned down the exact
-difference. Ask the authors which testbench/SDK changes they used if the cycle numbers matter.
+### Where the cycles go
+
+The program reads the E203's `mcycle` and `minstret` counters right before and right after the
+convolution loops, and again after printing:
+
+| Part | Cycles | Share of run |
+|---|---|---|
+| Convolution (9 outputs × 9 multiply-adds = 81 MACs) | 2,306 | 0.7% |
+| Printing the 3×3 result with `printf` | 85,219 | 24% |
+| Everything else (SDK startup, UART init, banner, timing printout) | ~263,000 | 75% |
+
+- **2,306 cycles for the convolution is the software baseline** to compare against the NICE
+  accelerator. That is about 28 cycles and 10 instructions per multiply-accumulate.
+- CPI is about 2.8. The E203 multiplier is multi-cycle (`mul` takes many cycles, not 1),
+  which is a large part of the cost and exactly what an accelerator removes.
+- Earlier runs without the timing code took 241,980 cycles. The extra ~108k cycles come from
+  the two additional `printf` lines that report the timing.
+
+**Total cycle count differs from the progress report** (report: 35,326 cycles, 18,049
+instructions for the whole run). The whole-run number is dominated by startup and `printf`,
+which depend on the testbench and SDK setup. The report's run also shows a different measured CPU
+frequency (540,344 Hz vs. our 16,500,000 Hz), so the authors' setup was not identical to ours.
+Use the convolution-only number (2,306 cycles) when comparing hardware against software.
 
 ---
 
@@ -63,7 +86,13 @@ cd ~
 git clone https://github.com/gradproject-27/riscv-yolo-accelerator.git
 git clone https://github.com/riscv-mcu/hbird-sdk.git
 git clone https://github.com/riscv-mcu/e203_hbirdv2.git
+# pin to the commits these results were produced with
+git -C hbird-sdk checkout 0e0e9083569721578c42f07a95b05a26c0760db6     # 2023-01-17
+git -C e203_hbirdv2 checkout 9f3e34f337f5d0a1236a285871ffa2032491617a  # 2025-08-06
 ```
+
+Tested versions: hbird-sdk `0e0e908`, e203_hbirdv2 `9f3e34f`, Nuclei GCC 2020.08 (GCC 9.2.0),
+Icarus Verilog 11.0, Ubuntu 22.04.5 LTS.
 
 - `riscv-yolo-accelerator`: the team project (tracks GitHub `main`; update with `git pull`).
 - `hbird-sdk`: Hummingbird software development kit (startup code, drivers, printf, build system).

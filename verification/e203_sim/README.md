@@ -13,9 +13,13 @@ with Icarus Verilog, using the stock E203 testbench plus a small monitor.
 
 ```bash
 git clone https://github.com/riscv-mcu/e203_hbirdv2.git ~/e203_hbirdv2
+git -C ~/e203_hbirdv2 checkout 9f3e34f337f5d0a1236a285871ffa2032491617a   # tested commit
 cd ~/e203_hbirdv2/vsim && make install      # run only once
 sudo apt install iverilog gtkwave
 ```
+
+Tested with e203_hbirdv2 `9f3e34f` (2025-08-06) and Icarus Verilog 11.0 on Ubuntu 22.04.
+All versions are listed in `software/e203_baremetal/README.md`.
 
 Set `E203_DIR` if the E203 clone is somewhere other than `~/e203_hbirdv2`.
 

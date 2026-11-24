@@ -31,6 +31,14 @@ module tb_monitor();
       $display("DTCM result             = 0x%h", sim_result);
       $display("Total cycle_count       = %0d", tb_top.cycle_count);
       $display("Valid instruction count = %0d", tb_top.valid_ir_cycle);
+      // Optional per-section counters a program may store after SIM_RESULT
+      // (0x90001004 / 0x90001008 / 0x9000100C), e.g. conv2d_sim
+      if (`MON_DTCM[SIM_RESULT_IDX+1] !== 32'bx) begin
+        $display("Program-reported counters (mcycle/minstret):");
+        $display("  section cycles        = %0d", `MON_DTCM[SIM_RESULT_IDX+1]);
+        $display("  section instructions  = %0d", `MON_DTCM[SIM_RESULT_IDX+2]);
+        $display("  extra cycles          = %0d", `MON_DTCM[SIM_RESULT_IDX+3]);
+      end
       $display("==========================================");
       $finish;
     end

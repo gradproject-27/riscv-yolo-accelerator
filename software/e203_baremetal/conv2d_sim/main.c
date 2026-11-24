@@ -1,13 +1,26 @@
 // Small bare-metal 2D convolution (5x5 image, 3x3 kernel) for the E203.
 // Transcribed from the EECE27 progress report (GP_Progress_RISCV_YOLOv3tiny.pdf, page 12).
+//
+// Added on top of the report's code: mcycle/minstret measurement of the
+// convolution alone and of the printf section, so the software-only cost can
+// later be compared with the NICE accelerator. The numbers are printed and
+// also stored next to SIM_RESULT so the testbench monitor can show them.
 
 #include <stdio.h>
 #include <stdint.h>
+#include "hbird_sdk_soc.h"
 
-#define SIM_RESULT (*(volatile uint32_t *)0x90001000)
+#define SIM_RESULT    (*(volatile uint32_t *)0x90001000)
+#define CONV_CYCLES   (*(volatile uint32_t *)0x90001004)
+#define CONV_INSTRET  (*(volatile uint32_t *)0x90001008)
+#define PRINT_CYCLES  (*(volatile uint32_t *)0x9000100C)
+
 #define IMG_SIZE 5
 #define K_SIZE   3
 #define OUT_SIZE (IMG_SIZE - K_SIZE + 1)
+
+// Stop the compiler from moving memory accesses across the counter reads
+#define BARRIER() __asm__ volatile ("" ::: "memory")
 
 int main(void)
 {
@@ -27,6 +40,11 @@ int main(void)
 
     int32_t output[OUT_SIZE][OUT_SIZE] = {0};
 
+    BARRIER();
+    uint64_t c0 = __get_rv_cycle();
+    uint64_t i0 = __get_rv_instret();
+    BARRIER();
+
     // Convolution / sliding-window calculation
     for (int i = 0; i < OUT_SIZE; i++) {
         for (int j = 0; j < OUT_SIZE; j++) {
@@ -44,6 +62,11 @@ int main(void)
         }
     }
 
+    BARRIER();
+    uint64_t c1 = __get_rv_cycle();
+    uint64_t i1 = __get_rv_instret();
+    BARRIER();
+
     printf("Convolution output:\n");
 
     for (int i = 0; i < OUT_SIZE; i++) {
@@ -52,6 +75,21 @@ int main(void)
         }
         printf("\n");
     }
+
+    BARRIER();
+    uint64_t c2 = __get_rv_cycle();
+
+    uint32_t conv_cycles  = (uint32_t)(c1 - c0);
+    uint32_t conv_instret = (uint32_t)(i1 - i0);
+    uint32_t print_cycles = (uint32_t)(c2 - c1);
+
+    printf("Convolution: %lu cycles, %lu instructions\n",
+           (unsigned long)conv_cycles, (unsigned long)conv_instret);
+    printf("Printing output: %lu cycles\n", (unsigned long)print_cycles);
+
+    CONV_CYCLES  = conv_cycles;
+    CONV_INSTRET = conv_instret;
+    PRINT_CYCLES = print_cycles;
 
     // Easy-to-check result for debugging
     volatile int32_t check = output[0][0];
