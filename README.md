@@ -299,6 +299,14 @@ export PATH=~/Nuclei/gcc/bin:$PATH
 make dasm && make sim                 # → PROGRAM PASS, prints output and cycle counts
 ```
 
+Every run also saves what it printed to `verification/e203_sim/build/<program>.log`
+(`add.log`, `conv2d_sim.log`), overwritten by the next run of the same program. Read the last
+result without re-running:
+
+```bash
+cat ~/riscv-yolo-accelerator/verification/e203_sim/build/conv2d_sim.log
+```
+
 ### 9.3 Look at the waveform
 
 ```bash
@@ -309,6 +317,17 @@ gtkwave verification/e203_sim/build/tb_top.vcd verification/e203_sim/conv2d_sim.
 
 The view shows clock/reset, the committed PC, register `x3`, DTCM writes (the `0xC0DE0001`
 pass value at `0x90001000`) and the UART bytes of `printf`.
+
+- Recording the waveform is slow: about **10 minutes** for `conv2d_sim` (vs. ~3 without
+  `DUMPWAVE=1`), and `tb_top.vcd` is about **108 MB**. Leave `DUMPWAVE=1` off unless you need it.
+- If the run worked, the log contains the line `iverlog used` (spelling from `tb_top.v`). The
+  waveform already exists after that, so to look at it again just run the `gtkwave` line.
+- `gtkwave` only **opens** the saved waveform; it does not run the program, so it does not print
+  the `PROGRAM PASS` summary. That text comes from the simulation run and is kept in
+  `build/conv2d_sim.log`.
+- The file is named `.vcd` but is written in GTKWave's compressed LXT2 format; GTKWave opens it
+  normally.
+- `Gtk-Message: Failed to load module "canberra-gtk-module"` is a harmless GTK warning.
 
 ### 9.4 Memory map used by the E203 programs
 
@@ -364,7 +383,7 @@ pass value at `0x90001000`) and the UART bytes of `printf`.
 | Document | What it covers |
 |---|---|
 | [docs/yolov3_tiny_int8_workflow.md](docs/yolov3_tiny_int8_workflow.md) | Step-by-step host workflow: build Darknet, dump layers, Python Float32/INT8, C engine, compare, visualize, troubleshooting |
-| [docs/E203_SIMULATION_REPORT.md](docs/E203_SIMULATION_REPORT.md) | Running C on the E203 RTL: setup, the 12 problems hit and their fixes, results, cycle breakdown |
+| [docs/E203_SIMULATION_REPORT.md](docs/E203_SIMULATION_REPORT.md) | Running C on the E203 RTL: setup, the 13 problems hit and their fixes, results, cycle breakdown |
 | [software/e203_baremetal/README.md](software/e203_baremetal/README.md) | The E203 programs, tested versions, how to build and run |
 | [verification/e203_sim/README.md](verification/e203_sim/README.md) | The simulation script and monitor, how a run ends |
 | [docs/GP_Progress_RISCV_YOLOv3tiny.pdf](docs/GP_Progress_RISCV_YOLOv3tiny.pdf) | Progress report slides |

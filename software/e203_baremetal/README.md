@@ -46,11 +46,11 @@ Check what you have: `git -C ~/hbird-sdk rev-parse HEAD` and `git -C ~/e203_hbir
 
 ```bash
 # 1 + 1
-cd software/e203_baremetal/add
+cd ~/riscv-yolo-accelerator/software/e203_baremetal/add
 make && make sim
 
 # convolution
-cd software/e203_baremetal/conv2d_sim
+cd ~/riscv-yolo-accelerator/software/e203_baremetal/conv2d_sim
 export PATH=~/Nuclei/gcc/bin:$PATH
 make dasm && make sim
 ```

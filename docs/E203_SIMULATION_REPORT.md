@@ -132,7 +132,7 @@ Folder: `software/e203_baremetal/add/`
 | `Makefile` | `make` builds `add.elf/.verilog/.dump`; `make sim` runs it on the E203 |
 
 ```bash
-cd software/e203_baremetal/add
+cd ~/riscv-yolo-accelerator/software/e203_baremetal/add
 make
 make sim
 ```
@@ -147,7 +147,7 @@ Folder: `software/e203_baremetal/conv2d_sim/` (built with the Hummingbird SDK fr
 - `Makefile`: SDK build with `SOC=hbirdv2 BOARD=ddr200t DOWNLOAD=ilm SIMU=rtl`.
 
 ```bash
-cd software/e203_baremetal/conv2d_sim
+cd ~/riscv-yolo-accelerator/software/e203_baremetal/conv2d_sim
 export PATH=~/Nuclei/gcc/bin:$PATH
 make dasm      # -> conv2d_sim.elf, .verilog, .dump
 make sim       # runs on the E203 (~3 minutes)
@@ -160,7 +160,7 @@ Folder: `verification/e203_sim/`
 | File | Purpose |
 |---|---|
 | `tb_monitor.v` | Extra Verilog module compiled next to the stock `tb_top.v`. It only watches: prints every byte written to UART0 (so `printf` shows up), and ends the simulation when `0xC0DE0001`/`0xC0DE0002` appears at DTCM `0x90001000`. |
-| `run.sh` | Compiles the E203 RTL + `tb_top.v` + `tb_monitor.v` with iverilog (once), then runs any `.verilog` program with `vvp`. |
+| `run.sh` | Compiles the E203 RTL + `tb_top.v` + `tb_monitor.v` with iverilog (once, and again whenever `tb_monitor.v` or `run.sh` change), then runs any `.verilog` program with `vvp`, saving its output to `build/<program>.log`. Compiles with `-D iverilog=1` so `DUMPWAVE=1` can write a waveform. |
 
 The original E203 files were **not modified**.
 
@@ -182,6 +182,7 @@ The original E203 files were **not modified**.
 | 10 | The convolution program never ends in the stock testbench | It ends with `while(1) nop` and reports through memory `0x90001000`, not through `x3`/`0x80000086`. The authors' run (PDF) shows "CONVOLUTION PASS", so they used a modified testbench | Wrote `tb_monitor.v` that watches `0x90001000` and the UART, without editing the E203 files |
 | 11 | The `printf` text appears **twice** in the simulation log: once at the very top (even before the testbench's time-0 `!!!!` banner) and once in the right place before `PROGRAM PASS` | Not a second run: the pass check fired once and there is a single cycle count. Text cannot be printed before time 0, so this is an output-buffering artifact of the simulator log. The PDF screenshot shows the same thing (text above the `!!!!` banner) | Harmless. Read the copy just above `PROGRAM PASS`. Root cause not investigated further |
 | 12 | Could not delete the empty download folder `~/Nuclei/dl` | Blocked by a safety check (it was the current working folder at the time) | Deleted manually afterwards (archive removed, then `rmdir ~/Nuclei/dl`) |
+| 13 | `DUMPWAVE=1` wrote no waveform: GTKWave failed with `Error opening .vcd file 'verification/e203_sim/build/tb_top.vcd'` | `tb_top.v` only calls `$dumpfile`/`$dumpvars` inside `` `ifdef iverilog ``, and `run.sh` (like E203's own `vsim` Makefile) never defined that macro. The old `vvp.exec` was also reused because `run.sh` only rebuilt when `tb_monitor.v` changed | Added `-D iverilog=1` to the `iverilog` command in `run.sh`, and made it rebuild when `run.sh` changes too. A waveform run now prints `iverlog used` (spelling from `tb_top.v`) and writes `build/tb_top.vcd` |
 
 ---
 
@@ -198,7 +199,7 @@ verification/e203_sim/
   run.sh                                 build + run a program on the E203 RTL
   tb_monitor.v                           UART + SIM_RESULT monitor
   conv2d_sim.gtkw                        GTKWave signal view
-  build/                                 (generated, not committed) simulator, waveform, logs
+  build/                                 (generated, not committed) simulator, waveform, <program>.log
 ```
 
 Outside the repository (cloned/installed separately):
@@ -211,16 +212,22 @@ Outside the repository (cloned/installed separately):
 
 ## Quick re-run
 
+Every command starts from an absolute path, so the steps work from any folder and in any order.
+
 ```bash
 # 1 + 1
-cd software/e203_baremetal/add && make && make sim
+cd ~/riscv-yolo-accelerator/software/e203_baremetal/add && make && make sim
 
 # convolution
-cd software/e203_baremetal/conv2d_sim
+cd ~/riscv-yolo-accelerator/software/e203_baremetal/conv2d_sim
 export PATH=~/Nuclei/gcc/bin:$PATH
 make dasm && make sim
 
-# waveform
+# waveform (~10 minutes, writes a ~108 MB file; the log shows "iverlog used")
+cd ~/riscv-yolo-accelerator
 DUMPWAVE=1 verification/e203_sim/run.sh software/e203_baremetal/conv2d_sim/conv2d_sim.verilog
 gtkwave verification/e203_sim/build/tb_top.vcd verification/e203_sim/conv2d_sim.gtkw
+
+# output of the last run of each program (gtkwave does not print it)
+cat ~/riscv-yolo-accelerator/verification/e203_sim/build/conv2d_sim.log
 ```
